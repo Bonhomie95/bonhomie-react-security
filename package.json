@@ -1,0 +1,61 @@
+{
+  "name": "@bonhomie/react-security",
+  "version": "1.0.0",
+  "description": "A frontend security layer for React: devtools detection, screenshot blocking, anti-iframe, tamper detection, watermarking, and more.",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.js --format esm,cjs --minify --dts",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "react",
+    "security",
+    "devtools",
+    "screenshot",
+    "copy protect",
+    "anti iframe",
+    "route guard",
+    "frontend security",
+    "react hook",
+    "tamper detection",
+    "watermark",
+    "vpn detection"
+  ],
+  "author": "Bonhomie",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bonhomie95/bonhomie-react-security"
+  },
+  "bugs": {
+    "url": "https://github.com/Bonhomie95/bonhomie-react-security/issues"
+  },
+  "homepage": "https://github.com/Bonhomie95/bonhomie-react-security#readme",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {}
+}
