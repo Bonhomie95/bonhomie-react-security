@@ -26,7 +26,6 @@ export { default as ReactSecurityProvider } from "./provider/ReactSecurityProvid
 // Utilities
 // ----------------------------
 export * from "./utils/detectDevTools.js";
-export * from "./utils/events.js";
 export * from "./utils/watermark.js";
 export * from "./utils/aiScreenshotDetector.js";
 export * from "./utils/vpnDetect.js";

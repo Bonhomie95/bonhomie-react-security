@@ -6,12 +6,11 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "unpkg": "dist/index.js",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -19,7 +18,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.js --format esm,cjs --minify --dts",
+    "build": "tsup src/index.js --format esm,cjs --minify --dts-resolve",
     "prepublishOnly": "npm run build",
     "test": "echo \"No tests yet\" && exit 0"
   },
@@ -28,25 +27,15 @@
     "security",
     "devtools",
     "screenshot",
-    "copy protect",
     "anti iframe",
     "route guard",
-    "frontend security",
-    "react hook",
-    "tamper detection",
     "watermark",
-    "vpn detection"
+    "frontend security",
+    "vpn detection",
+    "tamper detection"
   ],
   "author": "Bonhomie",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Bonhomie95/bonhomie-react-security"
-  },
-  "bugs": {
-    "url": "https://github.com/Bonhomie95/bonhomie-react-security/issues"
-  },
-  "homepage": "https://github.com/Bonhomie95/bonhomie-react-security#readme",
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-dom": ">=17.0.0"
@@ -56,6 +45,5 @@
     "react-dom": "^18.3.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {}
+  }
 }
