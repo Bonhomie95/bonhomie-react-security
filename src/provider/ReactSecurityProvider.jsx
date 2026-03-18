@@ -6,14 +6,12 @@ import {
   useEffect,
 } from 'react';
 
-// Base hooks
 import useDevtoolsDetect from '../hooks/useDevtoolsDetect.js';
 import useScreenshotBlock from '../hooks/useScreenshotBlock.js';
 import useClipboardLock from '../hooks/useClipboardLock.js';
 import useGhostingDetect from '../hooks/useGhostingDetect.js';
 import useKeystrokeTamper from '../hooks/useKeystrokeTamper.js';
 
-// Utilities
 import { detectAIScreenshot } from '../utils/aiScreenshotDetector.js';
 import { detectVPN } from '../utils/vpnDetect.js';
 import { applyDynamicWatermark, clearWatermark } from '../utils/watermark.js';
@@ -27,9 +25,6 @@ export const SecurityContext = createContext({
   config: {},
 });
 
-// ----------------------------------------------
-// SECURITY LEVELS PRESET
-// ----------------------------------------------
 const LEVELS = {
   low: {
     blockDevTools: true,
@@ -69,6 +64,16 @@ const LEVELS = {
   },
 };
 
+/**
+ * @param {{
+ *   children: React.ReactNode;
+ *   level?: 'low' | 'medium' | 'high';
+ *   config?: {
+ *     watermarkText?: string;   Custom watermark text shown on the page
+ *     [key: string]: any;
+ *   };
+ * }} props
+ */
 export default function ReactSecurityProvider({
   children,
   level = 'medium',
@@ -78,9 +83,6 @@ export default function ReactSecurityProvider({
   const [locked, setLocked] = useState(false);
   const [lastEvent, setLastEvent] = useState(null);
 
-  // ----------------------------------------
-  // Merge config preset with user overrides
-  // ----------------------------------------
   const merged = useMemo(() => {
     const defaults = LEVELS[level] || LEVELS.medium;
     return { ...defaults, ...config };
@@ -97,18 +99,15 @@ export default function ReactSecurityProvider({
     enableWatermark,
     detectVPN: checkVPN,
     detectKeystrokeTamper,
+    watermarkText = 'PROTECTED',
     onDetect,
     onLogout,
   } = merged;
 
-  // ----------------------------------------
-  // Mark suspicious activity
-  // ----------------------------------------
   const markSuspicious = useCallback(
     (type) => {
       setSuspicious(true);
       setLastEvent(type);
-
       if (lockOnSuspicious) setLocked(true);
       if (onDetect) onDetect(type);
       if (autoLogout && onLogout) onLogout(type);
@@ -118,12 +117,12 @@ export default function ReactSecurityProvider({
 
   const unlock = useCallback(() => {
     setLocked(false);
+    setSuspicious(false);
+    setLastEvent(null);
     clearWatermark();
   }, []);
 
-  // ----------------------------------------
-  // HOOKS — Core Detection
-  // ----------------------------------------
+  // Core detection hooks
   useDevtoolsDetect({
     enabled: blockDevTools,
     onDetect: () => markSuspicious('devtools'),
@@ -133,9 +132,11 @@ export default function ReactSecurityProvider({
     blockPrintScreen: blockScreenshot,
     blockImageSave: blockScreenshot,
     onScreenshotAttempt: async () => {
-      const aiFlag = await detectAIScreenshot();
-      if (aiFlag) markSuspicious('ai_screenshot');
-      else markSuspicious('screenshot');
+      const cleanup = detectAIScreenshot((signal) => {
+        if (signal === 'ai_screenshot_detected') markSuspicious('ai_screenshot');
+        else markSuspicious('screenshot');
+        cleanup();
+      });
     },
   });
 
@@ -147,9 +148,6 @@ export default function ReactSecurityProvider({
     onBlock: () => markSuspicious('clipboard'),
   });
 
-  // ----------------------------------------
-  // HOOKS — Advanced detection
-  // ----------------------------------------
   useGhostingDetect({
     enabled: detectKeystrokeTamper,
     onGhost: () => markSuspicious('ghosting'),
@@ -160,32 +158,25 @@ export default function ReactSecurityProvider({
     onTamper: () => markSuspicious('keystroke_tamper'),
   });
 
-  // ----------------------------------------
-  // VPN / Proxy Detection
-  // ----------------------------------------
+  // VPN / proxy detection
   useEffect(() => {
     if (!checkVPN) return;
-    detectVPN().then((isVPN) => {
-      if (isVPN) markSuspicious('vpn_detected');
+    detectVPN().then((result) => {
+      if (result?.suspicious) markSuspicious('vpn_detected');
     });
   }, [checkVPN, markSuspicious]);
 
-  // ----------------------------------------
-  // Watermark (dynamic)
-  // ----------------------------------------
+  // Dynamic watermark — uses the configurable watermarkText prop
   useEffect(() => {
     if (!enableWatermark) return;
-    applyDynamicWatermark('SECURE • BONHOMIE • ' + new Date().toISOString());
-
+    const text = `${watermarkText} • ${new Date().toISOString()}`;
+    applyDynamicWatermark(text);
     return () => clearWatermark();
-  }, [enableWatermark]);
+  }, [enableWatermark, watermarkText]);
 
-  // ----------------------------------------
-  // Noise Overlay (UI protection)
-  // ----------------------------------------
+  // Noise overlay
   useEffect(() => {
     if (!noiseOverlay) return;
-
     const el = document.createElement('div');
     el.id = 'bon-security-noise';
     el.style.cssText = `
@@ -196,25 +187,13 @@ export default function ReactSecurityProvider({
       z-index: 999999;
     `;
     document.body.appendChild(el);
-
     return () => el.remove();
   }, [noiseOverlay]);
 
-  // ----------------------------------------
-  // RENDER
-  // ----------------------------------------
   return (
     <SecurityContext.Provider
-      value={{
-        suspicious,
-        locked,
-        lastEvent,
-        markSuspicious,
-        unlock,
-        config: merged,
-      }}
+      value={{ suspicious, locked, lastEvent, markSuspicious, unlock, config: merged }}
     >
-      {/* Optional lock overlay */}
       {locked && showLockOverlay && (
         <div
           style={{
@@ -234,7 +213,6 @@ export default function ReactSecurityProvider({
           🔒 Security Lock Activated
         </div>
       )}
-
       {children}
     </SecurityContext.Provider>
   );

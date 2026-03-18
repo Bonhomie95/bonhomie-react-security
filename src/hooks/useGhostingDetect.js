@@ -1,14 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-export default function useGhostingDetect(callback) {
+/**
+ * Detects simultaneous key presses that exceed what a human can comfortably
+ * produce (keyboard ghosting heuristic), which is a signal of automated input.
+ *
+ * The callback is stored in a ref so callers don't need to memoize it.
+ *
+ * @param {{
+ *   enabled?: boolean;
+ *   threshold?: number;  Number of simultaneous keys that triggers detection (default: 4)
+ *   onGhost?: () => void;
+ * }} options
+ */
+export default function useGhostingDetect(options = {}) {
+  const { enabled = true, threshold = 4, onGhost } = options;
+
+  const onGhostRef = useRef(onGhost);
   useEffect(() => {
+    onGhostRef.current = onGhost;
+  });
+
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined') return;
+
     const keys = new Set();
 
     const down = (e) => {
       keys.add(e.key);
-
-      if (keys.size >= 4) {
-        callback('keyboard-ghosting');
+      if (keys.size >= threshold && typeof onGhostRef.current === 'function') {
+        onGhostRef.current();
       }
     };
 
@@ -23,5 +43,5 @@ export default function useGhostingDetect(callback) {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, [callback]);
+  }, [enabled, threshold]);
 }
